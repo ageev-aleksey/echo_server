@@ -20,6 +20,7 @@ namespace asio = boost::asio;
 Server::Server(std::string ip, int port)
     : m_service(), m_acceptor(m_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::make_address_v4("127.0.0.1"), 8080))
 {
+    std::cout << "ip -> " << ip << "\nport -> " << port << std::endl;
     m_acceptor.async_accept([this](const boost::system::error_code &err, asio::ip::tcp::socket socket) {
         this->accept_handler(err, socket);
     });
