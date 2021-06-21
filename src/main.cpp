@@ -28,9 +28,9 @@ auto configure(std::string file_path) {
         std::ofstream default_file(file_path);
         cfg = R"({
     "server": {
-    "host": "127.0.0.1",
-    "port": 8080
-}
+        "host": "127.0.0.1",
+        "port": 8080
+    }
 }
                 )";
         default_file << cfg;
@@ -41,9 +41,8 @@ auto configure(std::string file_path) {
     json::value j = json::parse(cfg);
 
     std::string v = j.at("server").at("host").as_string().c_str();
-    int p = j.at("server").at("port").as_int64();
     return di::make_injector(
-                di::bind<int>.to(p),
+                di::bind<int>.to(static_cast<int>(j.at("server").at("port").as_int64())),
                 di::bind<std::string>.to(v)
             );
 }
@@ -51,7 +50,7 @@ auto configure(std::string file_path) {
 int main() {
   //  auto injector = di::make_injector(di::bind<std::string>.to("127.0.0.1"),
     //                                  di::bind<int>.to(8080));
-    auto injector = configure("./cfg.json");
+    auto injector = configure("./config.json");
 
     //auto injector = di::make_injector(Configuraintion{});
     //Server s("127.0.0.1", 8080);

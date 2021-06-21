@@ -29,22 +29,25 @@ Server::Server(std::string ip, int port)
 void Server::accept_handler(const boost::system::error_code &err, asio::ip::tcp::socket &socket) {
     if (err) {
         std::cout << "Ошибка принятия подлкючения | " << err.message() << std::endl;
-        return;
-    }
-    std::cout << "Подключен новый клиент | " << socket.remote_endpoint().address().to_string() << std::endl;
-
-    std::list<Session>::iterator s_ptr;
-    if (m_disableSessions.empty()) {
-        m_enableSessions.push_back(Session());
     } else {
-        m_enableSessions.splice(m_enableSessions.end(), m_disableSessions, m_disableSessions.begin());
+        std::cout << "Подключен новый клиент | " << socket.remote_endpoint().address().to_string() << std::endl;
+
+        std::list<Session>::iterator s_ptr;
+        if (m_disableSessions.empty()) {
+            m_enableSessions.push_back(Session());
+        } else {
+            m_enableSessions.splice(m_enableSessions.end(), m_disableSessions, m_disableSessions.begin());
+        }
+        s_ptr = m_enableSessions.end();
+        s_ptr--;
+        s_ptr->init(std::move(socket));
+        s_ptr->getReadBuffer().resize(10);
+        s_ptr->getSocket().async_read_some(asio::buffer(s_ptr->getReadBuffer(), 10), [this, s_ptr](const boost::system::error_code &err, int tb) {
+            this->read_handler(s_ptr, err, tb);
+        });
     }
-    s_ptr = m_enableSessions.end();
-    s_ptr--;
-    s_ptr->init(std::move(socket));
-    s_ptr->getReadBuffer().resize(10);
-    s_ptr->getSocket().async_read_some(asio::buffer(s_ptr->getReadBuffer(), 10), [this, s_ptr](const boost::system::error_code &err, int tb) {
-        this->read_handler(s_ptr, err, tb);
+    m_acceptor.async_accept([this](const boost::system::error_code &err, asio::ip::tcp::socket socket) {
+        this->accept_handler(err, socket);
     });
 }
 
